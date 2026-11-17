@@ -161,7 +161,11 @@ p { color: var(--muted); }
   margin: 15px 0 10px;
 }
 
-.methods { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.methods {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
 
 .method {
   display: flex;
@@ -210,18 +214,33 @@ button, .btn {
   margin-top: 20px;
 }
 
-button:disabled { opacity: .4; cursor: not-allowed; }
+button:disabled {
+  opacity: .4;
+  cursor: not-allowed;
+}
 
-#status, .hint { font-size: 12px; margin-top: 12px; }
+#status, .hint {
+  font-size: 12px;
+  margin-top: 12px;
+}
+
+/* BEFORE / AFTER COMPARISON */
 
 .slider-compare {
   position: relative;
   overflow: hidden;
-  border-radius: 12px;
+  max-width: 650px;
+  width: 100%;
+  margin: 15px auto;
+  border-radius: 10px;
   background: #050a12;
 }
 
-.slider-compare > img { display: block; width: 100%; }
+.slider-compare > img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
 
 .clip {
   position: absolute;
@@ -235,7 +254,7 @@ button:disabled { opacity: .4; cursor: not-allowed; }
   height: 100%;
   width: auto;
   max-width: none;
-  object-fit: contain;
+  object-fit: fill;
 }
 
 .handle {
@@ -257,6 +276,8 @@ button:disabled { opacity: .4; cursor: not-allowed; }
   cursor: ew-resize;
 }
 
+/* OTHER RESULT IMAGES */
+
 .trio {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -271,12 +292,25 @@ figure {
   min-width: 0;
 }
 
-figure img { width: 100%; border-radius: 8px; display: block; }
-figcaption { color: var(--muted); font-size: 12px; padding-top: 8px; }
+figure img {
+  width: 100%;
+  border-radius: 8px;
+  display: block;
+}
+
+figcaption {
+  color: var(--muted);
+  font-size: 12px;
+  padding-top: 8px;
+}
 
 .table-wrap { overflow-x: auto; }
 
-table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 15px 0;
+}
 
 th, td {
   text-align: left;
@@ -323,15 +357,42 @@ footer {
 
 [hidden] { display: none !important; }
 
+/* MOBILE RESPONSIVE */
+
 @media(max-width: 700px) {
-  .top { flex-direction: column; gap: 12px; padding: 15px; }
-  nav { gap: 13px; flex-wrap: wrap; justify-content: center; }
+  .top {
+    flex-direction: column;
+    gap: 12px;
+    padding: 15px;
+  }
+
+  nav {
+    gap: 13px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
   nav a { font-size: 11px; }
+
   .hero { padding: 55px 18px; }
+
   main { width: 94%; }
+
   .panel { padding: 19px; }
+
   .tool-grid { grid-template-columns: 1fr; }
+
   .trio { grid-template-columns: 1fr; }
+
   .methods { grid-template-columns: 1fr 1fr; }
-  th, td { padding: 9px; font-size: 11px; }
+
+  .slider-compare {
+    max-width: 100%;
+    margin: 12px auto;
+  }
+
+  th, td {
+    padding: 9px;
+    font-size: 11px;
+  }
 }
