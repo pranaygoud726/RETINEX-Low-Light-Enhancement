@@ -3,16 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RETINEX – Low-Light Image Enhancement</title>
-
-<!-- CSS -->
-<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<title>RETINEX | Low-Light Enhancement</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-
 <body>
 
 <header class="top">
-  <a class="brand" href="#">RETINEX</a>
+  <a class="brand" href="#">RETINEX<span>.</span></a>
   <nav>
     <a href="#tool">Enhance</a>
     <a href="#theory">Theory</a>
@@ -22,240 +19,135 @@
 </header>
 
 <section class="hero">
-  <h1>See what the dark was hiding.</h1>
-  <p>
-    Upload an underexposed photo. Retinex separates the light
-    falling on a scene from the surfaces that reflect it.
-  </p>
+  <span class="tag">INTELLIGENT IMAGE PROCESSING</span>
+  <h1>See what the <span>dark</span><br>was hiding.</h1>
+  <p>Enhance low-light photographs with Retinex theory while preserving natural colours and details.</p>
 </section>
 
 <main>
-
-<section id="tool" class="panel">
-  <h2>Enhance an image</h2>
+<section class="panel" id="tool">
+  <div class="section-head">
+    <div>
+      <span class="eyebrow">IMAGE PROCESSING</span>
+      <h2>Enhance your image</h2>
+    </div>
+    <span class="live">● READY</span>
+  </div>
 
   <div class="tool-grid">
-    <div>
-      <label id="drop" class="drop" tabindex="0">
-        <input id="file" type="file"
-        accept="image/png,image/jpeg,image/bmp" hidden>
-
-        <img id="preview" alt="Image preview" hidden>
-
-        <span id="dropText">
-          Drop a dark image here or click to browse
-          <br>
-          <small>JPG, PNG or BMP, up to 10 MB</small>
-        </span>
-      </label>
-    </div>
+    <label id="drop" class="drop">
+      <input id="file" type="file" accept="image/png,image/jpeg,image/bmp" hidden>
+      <div class="upload-icon">↑</div>
+      <img id="preview" alt="Selected image" hidden>
+      <span id="dropText">
+        <strong>Drop your image here</strong>
+        <small>or click to browse · JPG, PNG, BMP · Max 10 MB</small>
+      </span>
+    </label>
 
     <form id="controls">
-
-      <fieldset>
-        <legend>Enhancement Method</legend>
-
-        <label class="radio">
+      <label class="field-title">Enhancement method</label>
+      <div class="methods">
+        <label class="method">
           <input type="radio" name="method" value="msr" checked>
-          Multi-Scale Retinex (MSR)
+          <span><b>MSR</b><small>Multi-scale Retinex</small></span>
         </label>
-
-        <label class="radio">
+        <label class="method">
           <input type="radio" name="method" value="ssr">
-          Single-Scale Retinex (SSR)
+          <span><b>SSR</b><small>Single-scale Retinex</small></span>
         </label>
-      </fieldset>
+      </div>
 
-      <label class="slider" id="sigmaRow">
-        Gaussian scale σ (SSR only):
-        <b id="sigmaVal">80</b>
-
-        <input type="range" name="sigma" id="sigma"
-        min="5" max="300" value="80">
+      <label class="slider-label">
+        Gaussian scale <b id="sigmaVal">80</b>
       </label>
+      <input type="range" id="sigma" min="5" max="300" value="80">
 
-      <label class="slider">
-        Outlier clipping:
-        <b id="clipVal">1</b>%
-
-        <input type="range" name="clip" id="clip"
-        min="0" max="5" step="0.5" value="1">
+      <label class="slider-label">
+        Outlier clipping <b><span id="clipVal">1</span>%</b>
       </label>
+      <input type="range" id="clip" min="0" max="5" step="0.5" value="1">
 
-      <button type="submit" id="go" disabled>
-        Enhance Image
-      </button>
-
-      <p id="status" role="status"></p>
+      <button id="go" type="submit" disabled>Enhance Image →</button>
+      <p id="status" role="status">Upload an image to get started.</p>
     </form>
   </div>
 
   <div id="results" hidden>
+    <div class="section-head result-head">
+      <h2>Enhancement results</h2>
+      <span class="live">● COMPLETE</span>
+    </div>
 
-    <h3>Before and After</h3>
-
+    <h3>Before / After comparison</h3>
     <div class="slider-compare" id="cmp">
       <img id="imgAfter" alt="Enhanced image">
-
       <div class="clip" id="clip-before">
         <img id="imgBefore" alt="Original image">
       </div>
-
       <div class="handle" id="handle"></div>
-
-      <input type="range" id="cmpRange"
-      min="0" max="100" value="50"
-      aria-label="Compare original and enhanced">
+      <input type="range" id="cmpRange" min="0" max="100" value="50" aria-label="Compare images">
     </div>
+    <p class="hint">Move the slider to compare the original and enhanced image.</p>
 
-    <p class="hint">
-      Left of the handle: original. Right: enhanced.
-    </p>
-
-    <h3>Image Decomposition</h3>
-
+    <h3>Retinex decomposition</h3>
     <div class="trio">
-      <figure>
-        <img id="imgI" alt="Input">
-        <figcaption>Input I(x,y)</figcaption>
-      </figure>
-
-      <figure>
-        <img id="imgL" alt="Illumination">
-        <figcaption>Illumination L(x,y)</figcaption>
-      </figure>
-
-      <figure>
-        <img id="imgR" alt="Reflectance">
-        <figcaption>Reflectance R(x,y)</figcaption>
-      </figure>
+      <figure><img id="imgI" alt="Input"><figcaption>Original input</figcaption></figure>
+      <figure><img id="imgL" alt="Illumination"><figcaption>Illumination</figcaption></figure>
+      <figure><img id="imgR" alt="Reflectance"><figcaption>Reflectance</figcaption></figure>
     </div>
 
-    <h3>Measured Change</h3>
+    <h3>Image quality measurements</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Metric</th><th>Original</th><th>Enhanced</th></tr></thead>
+        <tbody id="metrics"></tbody>
+      </table>
+    </div>
 
-    <table>
-      <thead>
-        <tr>
-          <th>Measure</th>
-          <th>Original</th>
-          <th>Enhanced</th>
-        </tr>
-      </thead>
-
-      <tbody id="metrics"></tbody>
-    </table>
-
-    <a id="download"
-    class="btn"
-    download="retinex_enhanced.png">
-      Download Enhanced Image
-    </a>
-
+    <a id="download" class="btn" download="retinex_enhanced.png">↓ Download enhanced image</a>
+    <p id="time" class="hint"></p>
   </div>
 </section>
 
-<section id="theory" class="panel">
-  <h2>How Retinex Works</h2>
-
-  <p>
-    Retinex theory (Land and McCann) models what a camera
-    records as the product of two things: the light on the
-    scene and how much each surface reflects.
-  </p>
-
-  <p class="eq">
-    I(x,y) = R(x,y) · L(x,y)
-  </p>
-
-  <ol class="steps">
-    <li>
-      <b>Log transform.</b>
-      Taking the logarithm turns the product into a sum:
-      log I = log R + log L.
-    </li>
-
-    <li>
-      <b>Estimate illumination.</b>
-      A Gaussian blur approximates the slowly changing
-      illumination.
-    </li>
-
-    <li>
-      <b>Subtract.</b>
-      log R = log I − log L.
-    </li>
-
-    <li>
-      <b>Rescale.</b>
-      The output is clipped and stretched to 0–255.
-    </li>
-  </ol>
+<section class="panel" id="theory">
+  <span class="eyebrow">THE TECHNOLOGY</span>
+  <h2>How Retinex works</h2>
+  <p>Retinex models an image as the product of illumination and reflectance.</p>
+  <div class="equation">I(x,y) = R(x,y) × L(x,y)</div>
+  <div class="steps">
+    <p><b>01 — Log transformation</b><br>Convert multiplication into addition using logarithms.</p>
+    <p><b>02 — Illumination estimation</b><br>Use Gaussian blur to estimate slowly changing illumination.</p>
+    <p><b>03 — Reflectance extraction</b><br>Subtract estimated illumination in the logarithmic domain.</p>
+    <p><b>04 — Image enhancement</b><br>Normalize the result and preserve natural image colours.</p>
+  </div>
 </section>
 
-<section id="compare" class="panel">
+<section class="panel" id="compare">
+  <span class="eyebrow">METHOD COMPARISON</span>
   <h2>SSR vs MSR</h2>
-
-  <table>
-    <thead>
-      <tr>
-        <th></th>
-        <th>SSR</th>
-        <th>MSR</th>
-      </tr>
-    </thead>
-
-    <tbody>
-      <tr>
-        <td>Scales</td>
-        <td>One σ</td>
-        <td>σ = 15, 80, 250</td>
-      </tr>
-
-      <tr>
-        <td>Small σ</td>
-        <td>Strong local detail</td>
-        <td>Contributes fine detail</td>
-      </tr>
-
-      <tr>
-        <td>Large σ</td>
-        <td>Good tonal balance</td>
-        <td>Contributes tonal balance</td>
-      </tr>
-
-      <tr>
-        <td>Best for</td>
-        <td>Studying σ</td>
-        <td>General enhancement</td>
-      </tr>
-    </tbody>
-  </table>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Feature</th><th>SSR</th><th>MSR</th></tr></thead>
+      <tbody>
+        <tr><td>Scales</td><td>One scale</td><td>Multiple scales</td></tr>
+        <tr><td>Detail</td><td>Local detail</td><td>Multi-scale detail</td></tr>
+        <tr><td>Processing</td><td>Simple</td><td>More comprehensive</td></tr>
+        <tr><td>Application</td><td>Single-scale study</td><td>General enhancement</td></tr>
+      </tbody>
+    </table>
+  </div>
 </section>
 
-<section id="about" class="panel">
-  <h2>About This Project</h2>
-
-  <p>
-    Digital Image Processing mini-project.
-    Image processing runs in Python using OpenCV and NumPy.
-    Flask connects the backend to this interface.
-  </p>
-
-  <p class="tech">
-    Python · OpenCV · NumPy · Flask · HTML5 · CSS3 · JavaScript
-  </p>
+<section class="panel" id="about">
+  <span class="eyebrow">ABOUT THE PROJECT</span>
+  <h2>RETINEX</h2>
+  <p>A Digital Image Processing project focused on improving visibility in low-light photographs using Retinex theory.</p>
+  <div class="tech">PYTHON · OPENCV · NUMPY · FLASK · HTML · CSS · JAVASCRIPT</div>
 </section>
-
 </main>
 
-<footer>
-  RETINEX – Low-Light Image Enhancement
-  <br>
-  B.Tech Digital Image Processing Project
-</footer>
-
-<!-- JavaScript -->
-<script src="{{ url_for('static', filename='js/script.js') }}"></script>
-
+<footer>RETINEX — Intelligent Low-Light Image Enhancement</footer>
+<script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>
