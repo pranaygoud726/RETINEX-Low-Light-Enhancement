@@ -10,7 +10,10 @@ app.config["MAX_CONTENT_LENGTH"] = 10 * 1024 * 1024
 
 
 def image_url(image):
-    success, encoded = cv2.imencode(".jpg", image)
+    success, encoded = cv2.imencode(
+    ".jpg", image,
+    [cv2.IMWRITE_JPEG_QUALITY, 80]
+)
 
     if not success:
         raise ValueError("Image encoding failed")
