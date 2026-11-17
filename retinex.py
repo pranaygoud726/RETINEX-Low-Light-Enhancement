@@ -3,266 +3,115 @@ import numpy as np
 import time
 
 
-# ---------------------------------
-# 1. Illumination estimation
-# ---------------------------------
-
-def _illumination(channel, sigma):
-    sigma = max(1, int(sigma))
-
-    return cv2.GaussianBlur(
-        channel,
-        (0, 0),
-        sigmaX=sigma,
-        sigmaY=sigma
+def normalise(image, clip=1.0):
+    clip = float(np.clip(clip, 0, 5))
+    low, high = np.percentile(
+        image, [clip, 100 - clip]
     )
 
+    if high <= low:
+        return np.zeros(image.shape, dtype=np.uint8)
 
-# ---------------------------------
-# 2. Single Scale Retinex
-# ---------------------------------
-
-def single_scale_retinex(img, sigma=80):
-    img = img.astype(np.float32) + 1.0
-
-    blur = _illumination(img, sigma) + 1.0
-
-    return np.log(img) - np.log(blur)
+    result = (image - low) / (high - low)
+    return (np.clip(result, 0, 1) * 255).astype(np.uint8)
 
 
-# ---------------------------------
-# 3. Multi Scale Retinex
-# ---------------------------------
+def ssr(image, sigma=80):
+    image = image.astype(np.float32) + 1.0
+    blur = cv2.GaussianBlur(
+        image, (0, 0), sigma
+    ) + 1.0
 
-def multi_scale_retinex(
-    img,
-    sigmas=(15, 80, 250),
-    weights=None
-):
-    if weights is None:
-        weights = [1 / len(sigmas)] * len(sigmas)
+    return np.log(image) - np.log(blur)
 
-    result = np.zeros_like(
-        img,
-        dtype=np.float32
-    )
 
-    for sigma, weight in zip(sigmas, weights):
-        result += weight * single_scale_retinex(
-            img, sigma
-        )
+def msr(image):
+    scales = (15, 80, 250)
+    result = np.zeros_like(image, dtype=np.float32)
+
+    for sigma in scales:
+        result += ssr(image, sigma) / len(scales)
 
     return result
 
 
-# ---------------------------------
-# 4. Safe normalization
-# ---------------------------------
+def metrics(image):
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-def _normalise(log_img, clip=1.0):
-    clip = float(np.clip(clip, 0, 5))
+    hist = cv2.calcHist(
+        [gray], [0], None, [256], [0, 256]
+    ).flatten()
 
-    low = np.percentile(log_img, clip)
-    high = np.percentile(log_img, 100 - clip)
-
-    if high <= low:
-        return np.zeros(log_img.shape, dtype=np.uint8)
-
-    result = np.clip(
-        (log_img - low) / (high - low),
-        0,
-        1
+    probabilities = hist / (hist.sum() + 1e-10)
+    entropy = -np.sum(
+        probabilities * np.log2(probabilities + 1e-10)
     )
 
-    return (result * 255).astype(np.uint8)
+    return {
+        "brightness": round(float(np.mean(gray)), 2),
+        "contrast": round(float(np.std(gray)), 2),
+        "entropy": round(float(entropy), 2)
+    }
 
-
-# ---------------------------------
-# 5. Noise reduction
-# ---------------------------------
-
-def reduce_noise(img, strength=5):
-    strength = int(np.clip(strength, 1, 15))
-
-    return cv2.fastNlMeansDenoising(
-        img,
-        None,
-        strength,
-        7,
-        21
-    )
-
-
-# ---------------------------------
-# 6. Main enhancement function
-# ---------------------------------
 
 def enhance(
     img_bgr,
     method="msr",
     sigma=80,
-    sigmas=(15, 80, 250),
     clip=1.0,
-    denoise=True,
-    denoise_strength=5
+    denoise=True
 ):
-    if img_bgr is None:
-        raise ValueError("Input image is empty")
+    if img_bgr is None or img_bgr.size == 0:
+        raise ValueError("Invalid image")
 
-    if img_bgr.ndim != 3 or img_bgr.shape[2] != 3:
-        raise ValueError("Expected a 3-channel BGR image")
+    start = time.time()
 
-    start_time = time.time()
+    original = img_bgr.copy()
 
-    original = np.clip(
-        img_bgr, 0, 255
-    ).astype(np.uint8)
-
-    # Convert to LAB for colour preservation
-    lab = cv2.cvtColor(
-        original,
-        cv2.COLOR_BGR2LAB
-    )
-
+    lab = cv2.cvtColor(original, cv2.COLOR_BGR2LAB)
     luminance, a, b = cv2.split(lab)
 
-    luminance_float = luminance.astype(np.float32) + 1.0
-
-    # Select Retinex method
-    method = method.lower()
+    light = luminance.astype(np.float32) + 1.0
 
     if method == "ssr":
-        retinex = single_scale_retinex(
-            luminance_float, sigma
-        )
-
-    elif method == "msr":
-        retinex = multi_scale_retinex(
-            luminance_float, sigmas
-        )
-
+        retinex = ssr(light, sigma)
     else:
-        raise ValueError("Method must be ssr or msr")
+        retinex = msr(light)
 
-    # Normalize Retinex result
-    retinex_normalized = _normalise(
-        retinex, clip
-    )
+    enhanced_l = normalise(retinex, clip)
 
-    # ---------------------------------
-    # Control excessive brightness
-    # ---------------------------------
-
-    # Blend original luminance and Retinex
-    # Higher original weight = more natural brightness
-
+    # Preserve original brightness and avoid overexposure
     enhanced_l = cv2.addWeighted(
-        luminance,
-        0.55,
-        retinex_normalized,
-        0.45,
+        luminance, 0.65,
+        enhanced_l, 0.35,
         0
     )
 
-    # Slightly reduce over-bright appearance
-    enhanced_l = np.clip(
-        enhanced_l.astype(np.float32) * 0.95,
-        0,
-        255
-    ).astype(np.uint8)
-
-    # ---------------------------------
-    # Noise reduction
-    # ---------------------------------
-
     if denoise:
-        enhanced_l = reduce_noise(
-            enhanced_l,
-            denoise_strength
+        enhanced_l = cv2.fastNlMeansDenoising(
+            enhanced_l, None, 5, 7, 21
         )
 
-    # ---------------------------------
-    # Preserve natural colours
-    # ---------------------------------
-
-    enhanced_lab = cv2.merge([
-        enhanced_l,
-        a,
-        b
-    ])
-
+    enhanced_lab = cv2.merge([enhanced_l, a, b])
     enhanced = cv2.cvtColor(
-        enhanced_lab,
-        cv2.COLOR_LAB2BGR
+        enhanced_lab, cv2.COLOR_LAB2BGR
     )
 
-    # ---------------------------------
-    # Illumination and reflectance
-    # ---------------------------------
-
-    illumination = _illumination(
-        luminance,
-        sigma
+    illumination = cv2.GaussianBlur(
+        luminance, (0, 0), 80
     )
 
-    reflectance = luminance.astype(
-        np.float32
-    ) / (
+    reflectance = light / (
         illumination.astype(np.float32) + 1.0
     )
 
-    reflectance = _normalise(
-        np.log(reflectance + 1.0),
-        clip
+    reflectance = normalise(
+        np.log(reflectance + 1.0), clip
     )
-
-    processing_time = time.time() - start_time
 
     return {
         "enhanced": enhanced,
         "illumination": illumination,
         "reflectance": reflectance,
-        "processing_time": processing_time
-    }
-
-
-# ---------------------------------
-# 7. Image quality metrics
-# ---------------------------------
-
-def metrics(img_bgr):
-    if img_bgr is None:
-        raise ValueError("Input image is empty")
-
-    gray = cv2.cvtColor(
-        img_bgr,
-        cv2.COLOR_BGR2GRAY
-    )
-
-    brightness = float(np.mean(gray))
-    contrast = float(np.std(gray))
-
-    entropy = float(
-        -np.sum(
-            np.histogram(
-                gray,
-                bins=256,
-                range=(0, 256),
-                density=True
-            )[0]
-            * np.log2(
-                np.histogram(
-                    gray,
-                    bins=256,
-                    range=(0, 256),
-                    density=True
-                )[0] + 1e-10
-            )
-        )
-    )
-
-    return {
-        "brightness": round(brightness, 2),
-        "contrast": round(contrast, 2),
-        "entropy": round(entropy, 2)
+        "processing_time": round(time.time() - start, 3)
     }
