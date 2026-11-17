@@ -1,116 +1,109 @@
 import cv2
 import numpy as np
-import time
 
 
-def normalise(image, clip=1.0):
-    clip = float(np.clip(clip, 0, 5))
-    low, high = np.percentile(image, [clip, 100 - clip])
+def normalise(image):
+    image = image.astype(np.float32)
+    low, high = np.percentile(image, (2, 98))
 
     if high <= low:
-        return np.zeros(image.shape, dtype=np.uint8)
+        return np.clip(image, 0, 255).astype(np.uint8)
 
-    result = (image - low) / (high - low)
-    return (np.clip(result, 0, 1) * 255).astype(np.uint8)
+    image = (image - low) * (255.0 / (high - low))
+    return np.clip(image, 0, 255).astype(np.uint8)
 
 
 def ssr(image, sigma=80):
     image = image.astype(np.float32) + 1.0
-    blur = cv2.GaussianBlur(image, (0, 0), sigma) + 1.0
-    return np.log(image) - np.log(blur)
+
+    illumination = cv2.GaussianBlur(
+        image, (0, 0), sigmaX=float(sigma)
+    )
+
+    reflectance = np.log(image) - np.log(illumination + 1.0)
+
+    return reflectance, illumination
 
 
 def msr(image):
+    image = image.astype(np.float32) + 1.0
+
+    scales = (15, 80, 200)
     result = np.zeros_like(image, dtype=np.float32)
 
-    for sigma in (30, 100):
-        result += ssr(image, sigma) / 2.0
+    illumination = np.zeros_like(image, dtype=np.float32)
 
-    return result
+    for sigma in scales:
+        blurred = cv2.GaussianBlur(
+            image, (0, 0), sigmaX=float(sigma)
+        )
+
+        result += np.log(image) - np.log(blurred + 1.0)
+        illumination += blurred / len(scales)
+
+    result /= len(scales)
+
+    return result, illumination
 
 
 def metrics(image):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-    hist = cv2.calcHist(
-        [gray], [0], None, [256], [0, 256]
-    ).flatten()
-
-    p = hist / (hist.sum() + 1e-10)
-    entropy = -np.sum(p * np.log2(p + 1e-10))
-
     return {
         "brightness": round(float(np.mean(gray)), 2),
-        "contrast": round(float(np.std(gray)), 2),
-        "entropy": round(float(entropy), 2)
+        "contrast": round(float(np.std(gray)), 2)
     }
 
 
-def enhance(img_bgr, method="msr", sigma=80,
-            clip=1.0, denoise=True):
+def enhance(image, method="msr", sigma=80, clip=1.0):
+    # Process only luminance to preserve natural colours
+    ycrcb = cv2.cvtColor(image, cv2.COLOR_BGR2YCrCb)
+    y, cr, cb = cv2.split(ycrcb)
 
-    if img_bgr is None or img_bgr.size == 0:
-        raise ValueError("Invalid image")
+    y_float = y.astype(np.float32)
 
-    start = time.time()
-
-    original = img_bgr.copy()
-
-    # Keep processing fast on Render
-    h, w = original.shape[:2]
-    scale = min(1.0, 800 / max(h, w))
-
-    if scale < 1.0:
-        original = cv2.resize(
-            original, None, fx=scale, fy=scale,
-            interpolation=cv2.INTER_AREA
-        )
-
-    lab = cv2.cvtColor(original, cv2.COLOR_BGR2LAB)
-    luminance, a, b = cv2.split(lab)
-
-    light = luminance.astype(np.float32) + 1.0
-
-    if method == "ssr":
-        retinex = ssr(light, sigma)
+    if method.lower() == "ssr":
+        retinex, illumination = ssr(y_float, sigma)
     else:
-        retinex = msr(light)
+        retinex, illumination = msr(y_float)
 
-    enhanced_l = normalise(retinex, clip)
+    # Normalise Retinex result
+    retinex = normalise(retinex)
 
-    # Natural brightness and colour preservation
-    enhanced_l = cv2.addWeighted(
-        luminance, 0.75,
-        enhanced_l, 0.25,
-        0
+    # Blend with original brightness for a natural result
+    strength = float(np.clip(clip, 0.2, 1.0))
+    enhanced_y = (
+        y.astype(np.float32) * (1.0 - 0.55 * strength)
+        + retinex.astype(np.float32) * (0.55 * strength)
     )
 
-    # Lightweight noise reduction
-    if denoise:
-        enhanced_l = cv2.bilateralFilter(
-            enhanced_l, 5, 20, 20
-        )
+    enhanced_y = np.clip(enhanced_y, 0, 255).astype(np.uint8)
 
-    enhanced_lab = cv2.merge([enhanced_l, a, b])
-    enhanced = cv2.cvtColor(
-        enhanced_lab, cv2.COLOR_LAB2BGR
+    # Gentle noise reduction
+    enhanced_y = cv2.bilateralFilter(
+        enhanced_y, 5, 25, 25
     )
 
-    illumination = cv2.GaussianBlur(
-        luminance, (0, 0), 80
+    # Restore colour
+    enhanced_image = cv2.merge((enhanced_y, cr, cb))
+    enhanced_image = cv2.cvtColor(
+        enhanced_image, cv2.COLOR_YCrCb2BGR
     )
 
-    reflectance = light / (
-        illumination.astype(np.float32) + 1.0
+    # Create display maps
+    illumination_map = normalise(np.log1p(illumination))
+    reflectance_map = normalise(retinex)
+
+    illumination_map = cv2.cvtColor(
+        illumination_map, cv2.COLOR_GRAY2BGR
     )
 
-    reflectance = normalise(
-        np.log(reflectance + 1.0), clip
+    reflectance_map = cv2.cvtColor(
+        reflectance_map, cv2.COLOR_GRAY2BGR
     )
 
-    return {
-        "enhanced": enhanced,
-        "illumination": illumination,
-        "reflectance": reflectance,
-        "processing_time": round(time.time() - start, 3)
-    }
+    return (
+        enhanced_image,
+        illumination_map,
+        reflectance_map
+    )
