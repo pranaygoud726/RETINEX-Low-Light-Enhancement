@@ -23,8 +23,8 @@ def ssr(image, sigma=80):
 def msr(image):
     result = np.zeros_like(image, dtype=np.float32)
 
-    for sigma in (15, 80, 250):
-        result += ssr(image, sigma) / 3.0
+    for sigma in (30, 100):
+        result += ssr(image, sigma) / 2.0
 
     return result
 
@@ -58,7 +58,7 @@ def enhance(img_bgr, method="msr", sigma=80,
 
     # Keep processing fast on Render
     h, w = original.shape[:2]
-    scale = min(1.0, 1200 / max(h, w))
+    scale = min(1.0, 800 / max(h, w))
 
     if scale < 1.0:
         original = cv2.resize(
