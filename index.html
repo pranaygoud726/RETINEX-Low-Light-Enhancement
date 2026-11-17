@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Retinex – Low-Light Image Enhancement</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="#">Retinex</a>
+  <nav><a href="#tool">Enhance</a><a href="#theory">Theory</a><a href="#compare">SSR vs MSR</a><a href="#about">About</a></nav>
+</header>
+
+<section class="hero">
+  <h1>See what the dark was hiding.</h1>
+  <p>Upload an underexposed photo. Retinex separates the light falling on a scene from the surfaces that reflect it, then keeps only the surfaces.</p>
+</section>
+
+<main>
+<section id="tool" class="panel">
+  <h2>Enhance an image</h2>
+  <div class="tool-grid">
+    <div>
+      <label id="drop" class="drop" tabindex="0">
+        <input id="file" type="file" accept="image/png,image/jpeg,image/bmp" hidden>
+        <img id="preview" alt="Preview of the selected image" hidden>
+        <span id="dropText">Drop a dark image here or click to browse<br><small>JPG, PNG or BMP, up to 10 MB</small></span>
+      </label>
+    </div>
+    <form id="controls">
+      <fieldset>
+        <legend>Method</legend>
+        <label class="radio"><input type="radio" name="method" value="msr" checked> Multi-Scale Retinex (MSR)</label>
+        <label class="radio"><input type="radio" name="method" value="ssr"> Single-Scale Retinex (SSR)</label>
+      </fieldset>
+      <label class="slider" id="sigmaRow">Gaussian scale σ (SSR only): <b id="sigmaVal">80</b>
+        <input type="range" name="sigma" id="sigma" min="5" max="300" value="80">
+      </label>
+      <label class="slider">Outlier clipping: <b id="clipVal">1</b>%
+        <input type="range" name="clip" id="clip" min="0" max="5" step="0.5" value="1">
+      </label>
+      <button type="submit" id="go" disabled>Enhance image</button>
+      <p id="status" role="status"></p>
+    </form>
+  </div>
+
+  <div id="results" hidden>
+    <h3>Before and after</h3>
+    <div class="slider-compare" id="cmp">
+      <img id="imgAfter" alt="Enhanced image">
+      <div class="clip" id="clip-before"><img id="imgBefore" alt="Original image"></div>
+      <div class="handle" id="handle"></div>
+      <input type="range" id="cmpRange" min="0" max="100" value="50" aria-label="Compare original and enhanced">
+    </div>
+    <p class="hint">Left of the handle: original. Right: enhanced.</p>
+
+    <h3>Decomposition</h3>
+    <div class="trio">
+      <figure><img id="imgI" alt="Input"><figcaption>Input I(x,y)</figcaption></figure>
+      <figure><img id="imgL" alt="Illumination"><figcaption>Illumination L(x,y), the Gaussian-blurred estimate</figcaption></figure>
+      <figure><img id="imgR" alt="Reflectance"><figcaption>Reflectance R(x,y), log I − log L, rescaled</figcaption></figure>
+    </div>
+
+    <h3>Measured change</h3>
+    <table>
+      <thead><tr><th>Measure</th><th>Original</th><th>Enhanced</th></tr></thead>
+      <tbody id="metrics"></tbody>
+    </table>
+    <a id="download" class="btn" download="retinex_enhanced.png">Download enhanced image</a>
+  </div>
+</section>
+
+<section id="theory" class="panel">
+  <h2>How Retinex works</h2>
+  <p>Retinex theory (Land and McCann) models what a camera records as the product of two things: the light on the scene and how much each surface reflects.</p>
+  <p class="eq">I(x,y) = R(x,y) · L(x,y)</p>
+  <ol class="steps">
+    <li><b>Log transform.</b> Taking the logarithm turns the product into a sum: log I = log R + log L.</li>
+    <li><b>Estimate illumination.</b> L changes slowly across an image, so a Gaussian blur of I approximates it.</li>
+    <li><b>Subtract.</b> log R = log I − log(G<sub>σ</sub> ∗ I). Uneven lighting cancels out and reflectance remains.</li>
+    <li><b>Rescale.</b> The log output is clipped at its outer percentiles and stretched to 0–255 for display.</li>
+  </ol>
+</section>
+
+<section id="compare" class="panel">
+  <h2>SSR vs MSR</h2>
+  <table>
+    <thead><tr><th></th><th>SSR</th><th>MSR</th></tr></thead>
+    <tbody>
+      <tr><td>Scales</td><td>One σ</td><td>σ = 15, 80, 250, equally weighted</td></tr>
+      <tr><td>Small σ</td><td>Strong local detail, risk of halos</td><td>Contributes fine detail</td></tr>
+      <tr><td>Large σ</td><td>Good tonal balance, flatter detail</td><td>Contributes tonal balance</td></tr>
+      <tr><td>Best for</td><td>Studying the effect of σ</td><td>General-purpose enhancement</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="about" class="panel">
+  <h2>About this project</h2>
+  <p>Digital Image Processing mini-project. Image processing runs in Python with OpenCV and NumPy; Flask connects it to this page. No brightness or contrast filter is applied at any point.</p>
+  <p class="tech">Python · OpenCV · NumPy · Flask · HTML5 · CSS3 · JavaScript</p>
+</section>
+</main>
+<footer>Retinex Low-Light Enhancement – B.Tech DIP project</footer>
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
