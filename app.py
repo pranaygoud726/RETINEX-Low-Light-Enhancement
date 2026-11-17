@@ -10,16 +10,16 @@ app.config["MAX_CONTENT_LENGTH"] = 10 * 1024 * 1024
 
 
 def image_url(image):
-    success, encoded = cv2.imencode(".png", image)
+    success, encoded = cv2.imencode(".jpg", image)
 
     if not success:
-        raise ValueError("Could not encode image")
+        raise ValueError("Image encoding failed")
 
     data = base64.b64encode(
         encoded.tobytes()
     ).decode("utf-8")
 
-    return "data:image/png;base64," + data
+    return "data:image/jpeg;base64," + data
 
 
 @app.route("/")
@@ -35,27 +35,29 @@ def process_image():
         if not uploaded:
             return jsonify({"error": "Please upload an image"}), 400
 
-        raw = np.frombuffer(
-            uploaded.read(), dtype=np.uint8
-        )
-
-        original = cv2.imdecode(
-            raw, cv2.IMREAD_COLOR
-        )
+        raw = np.frombuffer(uploaded.read(), np.uint8)
+        original = cv2.imdecode(raw, cv2.IMREAD_COLOR)
 
         if original is None:
-            return jsonify({"error": "Invalid image file"}), 400
+            return jsonify({"error": "Invalid image"}), 400
+
+        # Limit image size before processing
+        h, w = original.shape[:2]
+        scale = min(1.0, 1200 / max(h, w))
+
+        if scale < 1.0:
+            original = cv2.resize(
+                original, None, fx=scale, fy=scale,
+                interpolation=cv2.INTER_AREA
+            )
 
         method = request.form.get("method", "msr").lower()
 
         if method not in ("ssr", "msr"):
             return jsonify({"error": "Invalid method"}), 400
 
-        sigma = int(request.form.get("sigma", 80))
-        clip = float(request.form.get("clip", 1.0))
-
-        sigma = max(5, min(sigma, 300))
-        clip = max(0, min(clip, 5))
+        sigma = max(5, min(int(request.form.get("sigma", 80)), 300))
+        clip = max(0, min(float(request.form.get("clip", 1)), 5))
 
         result = enhance(
             original,
@@ -70,12 +72,8 @@ def process_image():
             "original": image_url(original),
             "input": image_url(original),
             "enhanced": image_url(enhanced),
-            "illumination": image_url(
-                result["illumination"]
-            ),
-            "reflectance": image_url(
-                result["reflectance"]
-            ),
+            "illumination": image_url(result["illumination"]),
+            "reflectance": image_url(result["reflectance"]),
             "metrics": {
                 "original": metrics(original),
                 "enhanced": metrics(enhanced)
@@ -96,4 +94,4 @@ def too_large(error):
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()
