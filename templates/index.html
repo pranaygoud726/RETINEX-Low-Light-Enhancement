@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>RETINEX | Low-Light Image Enhancement</title>
 
     <link rel="stylesheet"
@@ -17,7 +16,6 @@
     <!-- Navigation -->
     <nav class="navbar">
         <div class="logo">RETINEX</div>
-
         <div>
             <a href="#home">Home</a>
             <a href="#enhance">Enhance</a>
@@ -26,19 +24,17 @@
         </div>
     </nav>
 
-    <!-- Hero Section -->
+    <!-- Hero -->
     <header id="home">
         <p>INTELLIGENT IMAGE PROCESSING</p>
-
         <h1>See what the dark<br>was hiding.</h1>
-
         <p>
             Enhance low-light photographs using Retinex theory
             while preserving natural colours and details.
         </p>
     </header>
 
-    <!-- Image Processing -->
+    <!-- Upload and Enhancement -->
     <section id="enhance" class="card">
 
         <p>IMAGE PROCESSING</p>
@@ -46,11 +42,10 @@
 
         <form id="uploadForm">
 
-            <!-- Upload -->
             <div class="upload-area">
                 <label for="imageInput">
-                    <strong>Upload your image</strong>
-                    <p>Click to browse JPG, PNG or BMP · Max 10 MB</p>
+                    <strong>Select your image</strong>
+                    <p>JPG, PNG, BMP · Maximum 10 MB</p>
                 </label>
 
                 <input
@@ -60,6 +55,19 @@
                     accept="image/jpeg,image/png,image/bmp"
                     required
                 >
+            </div>
+
+            <!-- Uploaded Image Preview -->
+            <div id="previewSection" hidden>
+                <h3>Uploaded Image Preview</h3>
+
+                <img
+                    id="uploadPreview"
+                    alt="Uploaded image"
+                    style="width:100%;max-width:350px;margin:10px auto;"
+                >
+
+                <p id="fileName"></p>
             </div>
 
             <!-- Method -->
@@ -96,7 +104,7 @@
                 >
             </div>
 
-            <!-- Clipping -->
+            <!-- Enhancement Strength -->
             <div>
                 <label for="clip">
                     Enhancement strength:
@@ -123,8 +131,7 @@
         </form>
 
         <p id="status">Upload an image to get started.</p>
-
-        <p id="error" class="error" hidden></p>
+        <p id="error" hidden></p>
 
         <div id="loading" hidden>
             Processing your image...
@@ -136,10 +143,9 @@
     <section id="resultsSection" class="card" hidden>
 
         <h2>Enhancement Results</h2>
-
         <p id="processingInfo"></p>
 
-        <!-- Before and After -->
+        <!-- Before After -->
         <h3>Before / After Comparison</h3>
 
         <div class="slider-compare" id="comparison">
@@ -158,14 +164,14 @@
                 min="0"
                 max="100"
                 value="50"
-                aria-label="Compare original and enhanced image"
+                aria-label="Compare images"
             >
 
         </div>
 
-        <p>Drag the slider to compare Before and After.</p>
+        <p>Drag the slider to compare images.</p>
 
-        <!-- Individual Images -->
+        <!-- Image Results -->
         <div class="results">
 
             <div class="result-box">
@@ -180,12 +186,12 @@
 
             <div class="result-box">
                 <h3>Illumination Map</h3>
-                <img id="illuminationResult" alt="Illumination map">
+                <img id="illuminationResult" alt="Illumination">
             </div>
 
             <div class="result-box">
                 <h3>Reflectance Map</h3>
-                <img id="reflectanceResult" alt="Reflectance map">
+                <img id="reflectanceResult" alt="Reflectance">
             </div>
 
         </div>
@@ -225,7 +231,7 @@
 
     </section>
 
-    <!-- Retinex Theory -->
+    <!-- Theory -->
     <section id="theory" class="theory">
 
         <p>THE TECHNOLOGY</p>
@@ -239,29 +245,20 @@
         <h3>I(x,y) = R(x,y) × L(x,y)</h3>
 
         <h3>01 — Log Transformation</h3>
-        <p>
-            Converts multiplication into addition using logarithms.
-        </p>
+        <p>Converts multiplication into addition using logarithms.</p>
 
         <h3>02 — Illumination Estimation</h3>
-        <p>
-            Gaussian filtering estimates the illumination component.
-        </p>
+        <p>Gaussian filtering estimates the illumination component.</p>
 
         <h3>03 — Reflectance Extraction</h3>
-        <p>
-            The reflectance component is calculated to reveal image details.
-        </p>
+        <p>Calculates reflectance to reveal image details.</p>
 
         <h3>04 — Image Enhancement</h3>
-        <p>
-            The enhanced image is generated with improved visibility
-            and natural colour preservation.
-        </p>
+        <p>Improves visibility while preserving natural colours.</p>
 
     </section>
 
-    <!-- SSR and MSR -->
+    <!-- SSR vs MSR -->
     <section class="card">
 
         <h2>SSR vs MSR</h2>
@@ -272,15 +269,15 @@
                 <h3>Single-scale Retinex</h3>
                 <p>
                     Uses one Gaussian scale to estimate illumination.
-                    It is simpler and faster.
+                    It is simple and faster.
                 </p>
             </div>
 
             <div class="result-box">
                 <h3>Multi-scale Retinex</h3>
                 <p>
-                    Combines multiple Gaussian scales for more balanced
-                    enhancement across different image details.
+                    Combines multiple Gaussian scales for
+                    balanced image enhancement.
                 </p>
             </div>
 
@@ -312,11 +309,16 @@
 </div>
 
 <script>
+
+// Elements
 const form = document.getElementById("uploadForm");
-
 const imageInput = document.getElementById("imageInput");
-const enhanceBtn = document.getElementById("enhanceBtn");
 
+const previewSection = document.getElementById("previewSection");
+const uploadPreview = document.getElementById("uploadPreview");
+const fileName = document.getElementById("fileName");
+
+const enhanceBtn = document.getElementById("enhanceBtn");
 const loading = document.getElementById("loading");
 const errorBox = document.getElementById("error");
 const status = document.getElementById("status");
@@ -326,25 +328,75 @@ const resultsSection = document.getElementById("resultsSection");
 const sigma = document.getElementById("sigma");
 const clip = document.getElementById("clip");
 
-const sigmaValue = document.getElementById("sigmaValue");
-const clipValue = document.getElementById("clipValue");
-
 const cmpRange = document.getElementById("cmpRange");
 const beforeClip = document.getElementById("beforeClip");
 const sliderHandle = document.getElementById("sliderHandle");
 
-let originalImage = null;
+let previewURL = null;
 
-sigma.addEventListener("input", () => {
-    sigmaValue.textContent = sigma.value;
+// Uploaded image preview
+imageInput.addEventListener("change", function () {
+
+    errorBox.hidden = true;
+
+    const file = this.files[0];
+
+    if (!file) {
+        previewSection.hidden = true;
+        return;
+    }
+
+    const allowedTypes = [
+        "image/jpeg",
+        "image/png",
+        "image/bmp"
+    ];
+
+    if (!allowedTypes.includes(file.type)) {
+        errorBox.textContent = "Please select JPG, PNG or BMP.";
+        errorBox.hidden = false;
+        this.value = "";
+        previewSection.hidden = true;
+        return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+        errorBox.textContent = "Image must be under 10 MB.";
+        errorBox.hidden = false;
+        this.value = "";
+        previewSection.hidden = true;
+        return;
+    }
+
+    if (previewURL) {
+        URL.revokeObjectURL(previewURL);
+    }
+
+    previewURL = URL.createObjectURL(file);
+
+    uploadPreview.src = previewURL;
+    fileName.textContent = file.name;
+
+    previewSection.hidden = false;
+    resultsSection.hidden = true;
+
+    status.textContent = "Image uploaded. Ready to enhance.";
+
 });
 
-clip.addEventListener("input", () => {
-    clipValue.textContent = Number(clip.value).toFixed(1);
+// Slider values
+sigma.addEventListener("input", function () {
+    document.getElementById("sigmaValue").textContent = this.value;
 });
 
-// Before / After slider
+clip.addEventListener("input", function () {
+    document.getElementById("clipValue").textContent =
+        Number(this.value).toFixed(1);
+});
+
+// Before and After slider
 function updateComparison() {
+
     const value = cmpRange.value;
 
     beforeClip.style.width = value + "%";
@@ -357,25 +409,17 @@ function updateComparison() {
 }
 
 cmpRange.addEventListener("input", updateComparison);
-
 window.addEventListener("resize", updateComparison);
 
-// Upload and enhance
-form.addEventListener("submit", async (event) => {
+// Enhance image
+form.addEventListener("submit", async function (event) {
+
     event.preventDefault();
 
     errorBox.hidden = true;
 
     if (!imageInput.files.length) {
-        errorBox.textContent = "Please select an image.";
-        errorBox.hidden = false;
-        return;
-    }
-
-    const file = imageInput.files[0];
-
-    if (file.size > 10 * 1024 * 1024) {
-        errorBox.textContent = "Please upload an image under 10 MB.";
+        errorBox.textContent = "Please select an image first.";
         errorBox.hidden = false;
         return;
     }
@@ -384,12 +428,14 @@ form.addEventListener("submit", async (event) => {
 
     loading.hidden = false;
     resultsSection.hidden = true;
+
     enhanceBtn.disabled = true;
     enhanceBtn.textContent = "Processing...";
 
     status.textContent = "Enhancing image...";
 
     try {
+
         const response = await fetch("/enhance", {
             method: "POST",
             body: formData
@@ -427,7 +473,7 @@ form.addEventListener("submit", async (event) => {
         document.getElementById("afterContrast").textContent =
             data.metrics.after.contrast;
 
-        // Processing information
+        // Processing time
         document.getElementById("processingInfo").textContent =
             data.method + " · " + data.processing_time + " seconds";
 
@@ -436,12 +482,11 @@ form.addEventListener("submit", async (event) => {
 
         // Show results
         resultsSection.hidden = false;
-
         cmpRange.value = 50;
 
         requestAnimationFrame(updateComparison);
 
-        status.textContent = "Image enhancement completed successfully.";
+        status.textContent = "Enhancement completed successfully.";
 
         resultsSection.scrollIntoView({
             behavior: "smooth",
@@ -449,16 +494,21 @@ form.addEventListener("submit", async (event) => {
         });
 
     } catch (error) {
+
         errorBox.textContent = error.message;
         errorBox.hidden = false;
         status.textContent = "Enhancement failed.";
 
     } finally {
+
         loading.hidden = true;
         enhanceBtn.disabled = false;
         enhanceBtn.textContent = "Enhance Image →";
+
     }
+
 });
+
 </script>
 
 </body>
