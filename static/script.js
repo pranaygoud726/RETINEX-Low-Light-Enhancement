@@ -8,48 +8,50 @@ const statusText = document.getElementById("status");
 const results = document.getElementById("results");
 
 let selectedFile = null;
+let previewURL = null;
 
-function showPreview(file) {
+function selectImage(file) {
   if (!file || !file.type.startsWith("image/")) {
     statusText.textContent = "Please select a valid image.";
     return;
   }
 
   if (file.size > 10 * 1024 * 1024) {
-    statusText.textContent = "Image must be smaller than 10 MB.";
+    statusText.textContent = "Maximum image size is 10 MB.";
     return;
   }
 
   selectedFile = file;
-  preview.src = URL.createObjectURL(file);
+
+  if (previewURL) URL.revokeObjectURL(previewURL);
+  previewURL = URL.createObjectURL(file);
+
+  preview.src = previewURL;
   preview.hidden = false;
   dropText.hidden = true;
   go.disabled = false;
-  statusText.textContent = "Image selected successfully.";
   results.hidden = true;
+
+  statusText.textContent = "Image selected successfully.";
 }
 
 fileInput.addEventListener("change", () => {
-  showPreview(fileInput.files[0]);
+  selectImage(fileInput.files[0]);
 });
 
-["dragover", "dragenter"].forEach(event => {
-  drop.addEventListener(event, e => {
-    e.preventDefault();
-    drop.style.borderColor = "#20d6a0";
-  });
+drop.addEventListener("dragover", event => {
+  event.preventDefault();
+  drop.style.borderColor = "#22d6a0";
 });
 
-["dragleave", "drop"].forEach(event => {
-  drop.addEventListener(event, e => {
-    e.preventDefault();
-    drop.style.borderColor = "";
-  });
+drop.addEventListener("dragleave", () => {
+  drop.style.borderColor = "";
 });
 
-drop.addEventListener("drop", e => {
-  const file = e.dataTransfer.files[0];
-  showPreview(file);
+drop.addEventListener("drop", event => {
+  event.preventDefault();
+  drop.style.borderColor = "";
+  selectImage(event.dataTransfer.files[0]);
 });
 
 const sigma = document.getElementById("sigma");
@@ -65,8 +67,28 @@ clip.addEventListener("input", () => {
   clipVal.textContent = clip.value;
 });
 
-form.addEventListener("submit", async e => {
-  e.preventDefault();
+form.querySelectorAll('input[name="method"]').forEach(input => {
+  input.addEventListener("change", () => {
+    sigma.disabled = input.value === "msr" && input.checked;
+  });
+});
+
+sigma.disabled = true;
+
+function showMetric(label, before, after) {
+  const row = document.createElement("tr");
+
+  [label, before, after].forEach(value => {
+    const cell = document.createElement("td");
+    cell.textContent = value;
+    row.appendChild(cell);
+  });
+
+  document.getElementById("metrics").appendChild(row);
+}
+
+form.addEventListener("submit", async event => {
+  event.preventDefault();
 
   if (!selectedFile) {
     statusText.textContent = "Please upload an image first.";
@@ -83,7 +105,7 @@ form.addEventListener("submit", async e => {
   data.append("clip", clip.value);
 
   go.disabled = true;
-  statusText.textContent = "Enhancing image... Please wait.";
+  statusText.textContent = "Processing image... Please wait.";
 
   try {
     const response = await fetch("/enhance", {
@@ -94,52 +116,45 @@ form.addEventListener("submit", async e => {
     const result = await response.json();
 
     if (!response.ok) {
-      throw new Error(result.error || "Image enhancement failed.");
+      throw new Error(result.error || "Enhancement failed.");
     }
 
-    document.getElementById("imgBefore").src =
-      result.original || preview.src;
-
-    document.getElementById("imgAfter").src =
-      result.enhanced;
-
-    document.getElementById("imgI").src =
-      result.input;
-
-    document.getElementById("imgL").src =
-      result.illumination;
-
-    document.getElementById("imgR").src =
-      result.reflectance;
+    document.getElementById("imgBefore").src = result.original;
+    document.getElementById("imgAfter").src = result.enhanced;
+    document.getElementById("imgI").src = result.input;
+    document.getElementById("imgL").src = result.illumination;
+    document.getElementById("imgR").src = result.reflectance;
 
     const metrics = document.getElementById("metrics");
-    metrics.innerHTML = "";
+    metrics.replaceChildren();
 
-    const names = [
-      ["Brightness", "brightness"],
-      ["Contrast", "contrast"],
-      ["Entropy", "entropy"]
-    ];
+    showMetric(
+      "Brightness",
+      result.metrics.original.brightness,
+      result.metrics.enhanced.brightness
+    );
 
-    names.forEach(([label, key]) => {
-      const before = result.metrics.original[key];
-      const after = result.metrics.enhanced[key];
+    showMetric(
+      "Contrast",
+      result.metrics.original.contrast,
+      result.metrics.enhanced.contrast
+    );
 
-      metrics.innerHTML += `
-        <tr>
-          <td>${label}</td>
-          <td>${Number(before).toFixed(2)}</td>
-          <td>${Number(after).toFixed(2)}</td>
-        </tr>`;
-    });
+    showMetric(
+      "Entropy",
+      result.metrics.original.entropy,
+      result.metrics.enhanced.entropy
+    );
 
-    const download = document.getElementById("download");
-    download.href = result.enhanced;
+    document.getElementById("download").href = result.enhanced;
+
+    document.getElementById("time").textContent =
+      "Processing time: " + result.processing_time + " seconds";
 
     results.hidden = false;
-    statusText.textContent = "Image enhanced successfully.";
-
     updateCompare();
+
+    statusText.textContent = "Enhancement completed successfully.";
 
     results.scrollIntoView({
       behavior: "smooth",
@@ -158,10 +173,16 @@ const beforeClip = document.getElementById("clip-before");
 const handle = document.getElementById("handle");
 
 function updateCompare() {
-  const value = cmpRange.value;
+  const value = Number(cmpRange.value);
+  const comparison = document.getElementById("cmp");
+  const width = comparison.clientWidth;
+
   beforeClip.style.width = value + "%";
   handle.style.left = value + "%";
+
+  document.getElementById("imgBefore").style.width = width + "px";
 }
 
 cmpRange.addEventListener("input", updateCompare);
-updateCompare();
+
+window.addEventListener("resize", updateCompare);
