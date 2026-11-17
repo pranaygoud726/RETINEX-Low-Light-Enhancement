@@ -1,237 +1,134 @@
 :root {
   --bg: #080d18;
-  --panel: #101a2b;
-  --border: #25364c;
-  --text: #eef4ff;
-  --muted: #94a6bd;
-  --green: #22d6a0;
+  --card: #111a29;
+  --border: #263448;
+  --text: #f4f7fb;
+  --muted: #9ba9bb;
+  --green: #00e6a0;
 }
 
 * {
-  margin: 0;
-  padding: 0;
   box-sizing: border-box;
 }
 
-html { scroll-behavior: smooth; }
-
 body {
-  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 18px;
   background: var(--bg);
   color: var(--text);
-  line-height: 1.65;
+  font-family: Arial, sans-serif;
 }
 
-.top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 18px 8%;
-  background: #0b1423;
-  border-bottom: 1px solid var(--border);
-  position: sticky;
-  top: 0;
-  z-index: 10;
+.container {
+  width: 100%;
+  max-width: 1050px;
+  margin: auto;
 }
 
-.brand {
-  color: var(--text);
-  font-size: 24px;
-  font-weight: 800;
-  text-decoration: none;
-  letter-spacing: 2px;
-}
-
-.brand span, .hero h1 span { color: var(--green); }
-
-nav { display: flex; gap: 25px; }
-
-nav a {
-  color: var(--muted);
-  text-decoration: none;
-  font-size: 13px;
-}
-
-nav a:hover { color: var(--green); }
-
-.hero {
+header {
   text-align: center;
-  max-width: 850px;
-  margin: auto;
-  padding: 85px 20px 65px;
-}
-
-.tag, .eyebrow {
-  color: var(--green);
-  font-size: 11px;
-  letter-spacing: 2px;
-  font-weight: bold;
-}
-
-.hero h1 {
-  font-size: clamp(38px, 6vw, 65px);
-  line-height: 1.12;
-  margin: 20px 0;
-}
-
-.hero p { color: var(--muted); }
-
-main {
-  width: 90%;
-  max-width: 1100px;
-  margin: auto;
-}
-
-.panel {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 18px;
-  padding: 32px;
   margin-bottom: 25px;
-  box-shadow: 0 15px 40px #0003;
 }
 
-h2 { font-size: 25px; margin: 8px 0 22px; }
-h3 { font-size: 17px; margin: 28px 0 15px; }
-p { color: var(--muted); }
-
-.section-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 24px;
-}
-
-.section-head h2 { margin: 5px 0 0; }
-
-.live {
+h1 {
   color: var(--green);
-  font-size: 11px;
-  letter-spacing: 1px;
+  font-size: 28px;
+  margin-bottom: 8px;
 }
 
-.tool-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 25px;
+h2 {
+  font-size: 20px;
 }
 
-.drop {
-  min-height: 300px;
-  background: #0a1423;
-  border: 2px dashed #354a60;
-  border-radius: 14px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  padding: 20px;
-  cursor: pointer;
-  gap: 15px;
+h3 {
+  font-size: 15px;
 }
 
-.drop:hover { border-color: var(--green); }
-
-.drop strong { display: block; color: var(--text); }
-.drop small { color: var(--muted); font-size: 12px; }
-
-.upload-icon {
-  width: 55px;
-  height: 55px;
-  display: grid;
-  place-items: center;
-  border-radius: 16px;
-  background: #153b36;
-  color: var(--green);
-  font-size: 30px;
-}
-
-#preview {
-  max-width: 100%;
-  max-height: 230px;
-  border-radius: 10px;
-  object-fit: contain;
-}
-
-.field-title, .slider-label {
-  display: block;
+p {
   color: var(--muted);
-  font-size: 13px;
-  margin: 15px 0 10px;
+  line-height: 1.5;
 }
 
-.methods {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-.method {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 13px;
+.card {
+  background: var(--card);
   border: 1px solid var(--border);
-  border-radius: 10px;
-  cursor: pointer;
+  border-radius: 13px;
+  padding: 18px;
+  margin-bottom: 16px;
 }
 
-.method:has(input:checked) {
-  border-color: var(--green);
-  background: #12332f;
-}
-
-.method input { accent-color: var(--green); }
-.method b { display: block; color: var(--text); }
-.method small { display: block; color: var(--muted); font-size: 10px; }
-
-.slider-label {
-  display: flex;
-  justify-content: space-between;
-}
-
-.slider-label b { color: var(--green); }
-
-input[type=range] {
-  width: 100%;
-  accent-color: var(--green);
-  cursor: pointer;
-}
-
-button, .btn {
-  display: inline-block;
-  width: 100%;
-  padding: 14px;
-  border: 0;
-  border-radius: 9px;
+button {
   background: var(--green);
-  color: #061810;
+  color: #06130f;
+  border: none;
+  padding: 11px 20px;
+  border-radius: 8px;
   font-weight: bold;
   cursor: pointer;
-  text-align: center;
-  text-decoration: none;
-  margin-top: 20px;
+}
+
+button:hover {
+  opacity: 0.85;
 }
 
 button:disabled {
-  opacity: .4;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
-#status, .hint {
-  font-size: 12px;
-  margin-top: 12px;
+input,
+select {
+  max-width: 100%;
+  background: #0b1422;
+  color: white;
+  border: 1px solid #34445a;
+  padding: 10px;
+  border-radius: 7px;
+  margin: 7px 0;
 }
 
-/* BEFORE / AFTER COMPARISON */
+input[type="file"] {
+  width: 100%;
+}
+
+label {
+  color: var(--muted);
+  display: inline-block;
+  margin: 6px 0;
+}
+
+img {
+  max-width: 100%;
+  border-radius: 9px;
+}
+
+/* Results layout */
+
+.results {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.result-box {
+  min-width: 0;
+  background: #0b1422;
+  padding: 12px;
+  border-radius: 10px;
+}
+
+.result-box h3 {
+  margin-top: 0;
+}
+
+/* Before and After comparison */
 
 .slider-compare {
   position: relative;
-  overflow: hidden;
-  max-width: 650px;
   width: 100%;
-  margin: 15px auto;
+  max-width: 420px;
+  margin: 12px auto;
+  overflow: hidden;
   border-radius: 10px;
   background: #050a12;
 }
@@ -251,10 +148,11 @@ button:disabled {
 }
 
 .clip img {
-  height: 100%;
+  display: block;
   width: auto;
   max-width: none;
-  object-fit: fill;
+  height: 100%;
+  border-radius: 0;
 }
 
 .handle {
@@ -272,127 +170,79 @@ button:disabled {
   inset: 0;
   width: 100%;
   height: 100%;
+  margin: 0;
   opacity: 0;
   cursor: ew-resize;
 }
 
-/* OTHER RESULT IMAGES */
+/* Metrics */
 
-.trio {
+.metrics {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
+  gap: 10px;
 }
 
-figure {
-  background: #0a1423;
-  border: 1px solid var(--border);
-  padding: 10px;
-  border-radius: 12px;
-  min-width: 0;
-}
-
-figure img {
-  width: 100%;
-  border-radius: 8px;
-  display: block;
-}
-
-figcaption {
-  color: var(--muted);
-  font-size: 12px;
-  padding-top: 8px;
-}
-
-.table-wrap { overflow-x: auto; }
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 15px 0;
-}
-
-th, td {
-  text-align: left;
-  padding: 13px;
-  border-bottom: 1px solid var(--border);
-  font-size: 13px;
-}
-
-th { color: var(--green); background: #0a1423; }
-td { color: var(--muted); }
-
-.equation {
-  color: var(--green);
-  background: #0a1423;
+.metric {
+  background: #0b1422;
+  padding: 12px;
+  border-radius: 9px;
   text-align: center;
-  padding: 22px;
-  border-radius: 12px;
-  font-size: 24px;
-  margin: 20px 0;
 }
 
-.steps p {
-  padding: 13px 0;
-  border-bottom: 1px solid var(--border);
-  font-size: 14px;
-}
-
-.steps b { color: var(--green); }
-
-.tech {
+.metric h3 {
   color: var(--green);
-  font-size: 12px;
-  letter-spacing: 1px;
-  margin-top: 18px;
+  margin: 5px 0;
 }
+
+/* Status and loading */
+
+#loading,
+.loading {
+  color: var(--green);
+  text-align: center;
+  padding: 12px;
+}
+
+#error,
+.error {
+  color: #ff7373;
+  padding: 10px;
+}
+
+/* Footer */
 
 footer {
   text-align: center;
+  padding: 20px;
   color: var(--muted);
-  padding: 30px;
-  border-top: 1px solid var(--border);
-  font-size: 12px;
+  font-size: 13px;
 }
 
-[hidden] { display: none !important; }
+/* Mobile responsive */
 
-/* MOBILE RESPONSIVE */
-
-@media(max-width: 700px) {
-  .top {
-    flex-direction: column;
-    gap: 12px;
-    padding: 15px;
+@media (max-width: 600px) {
+  body {
+    padding: 11px;
   }
 
-  nav {
-    gap: 13px;
-    flex-wrap: wrap;
-    justify-content: center;
+  h1 {
+    font-size: 23px;
   }
 
-  nav a { font-size: 11px; }
+  .card {
+    padding: 13px;
+  }
 
-  .hero { padding: 55px 18px; }
-
-  main { width: 94%; }
-
-  .panel { padding: 19px; }
-
-  .tool-grid { grid-template-columns: 1fr; }
-
-  .trio { grid-template-columns: 1fr; }
-
-  .methods { grid-template-columns: 1fr 1fr; }
+  .results {
+    grid-template-columns: 1fr;
+  }
 
   .slider-compare {
     max-width: 100%;
-    margin: 12px auto;
   }
 
-  th, td {
-    padding: 9px;
-    font-size: 11px;
+  .metrics {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
